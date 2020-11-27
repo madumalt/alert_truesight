@@ -6,8 +6,7 @@ import logging.handlers
 
 def setup_logger(level):
     logger = logging.getLogger('alert_truesight')
-    logger.propagate = False # Prevent the log messages from being duplicated in the python.log file
-    logger.setLevel(level)
+    logger.propagate = False
 
     file_handler = logging.handlers.RotatingFileHandler(
         '/Users/thilinamad/Desktop/splunk_enterprise/splunk' + '/var/log/splunk/alert_truesight.log', 
@@ -16,7 +15,9 @@ def setup_logger(level):
     )
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     file_handler.setFormatter(formatter)
+
     logger.addHandler(file_handler)
+    logger.setLevel(level)
     
     return logger
  
@@ -29,6 +30,11 @@ def alert_truesight(settings, hostname, ip_address, object_class_name, object_na
     return True
 
 
+def __get_config(config, key):
+    value = config.get(key)
+    return '' if not value else value.strip()
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] != "--execute":
         sys.stderr.write("FATAL Unsupported execution mode (expected --execute flag)\n")
@@ -38,12 +44,12 @@ if __name__ == "__main__":
         config = settings['configuration']
         success = alert_truesight(
             settings,
-            hostname=config.get('hostname'),
-            ip_address=config.get('ip'),
-            object_class_name=config.get('object_class'),
-            object_name=config.get('object'),
-            parameter=config.get('parameter'),
-            severity=config.get('severity')
+            hostname=__get_config(config, 'hostname'),
+            ip_address=__get_config(config, 'ip'),
+            object_class_name=__get_config(config, 'object_class'),
+            object_name=__get_config(config, 'object'),
+            parameter=__get_config(config, 'parameter'),
+            severity=__get_config(config, 'severity')
         )
         if not success:
             sys.exit(2)
